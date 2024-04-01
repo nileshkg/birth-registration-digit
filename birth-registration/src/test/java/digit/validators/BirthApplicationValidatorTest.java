@@ -1,64 +1,77 @@
 package digit.validators;
 
-import digit.TestConfiguration;
-import digit.models.BirthApplicationSearchCriteria;
 import digit.models.BirthRegistrationApplication;
 import digit.models.BirthRegistrationRequest;
 import digit.repository.BirthRegistrationRepository;
-import org.checkerframework.checker.units.qual.A;
-import org.egov.common.contract.request.RequestInfo;
 import org.egov.tracer.model.CustomException;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
-@Import(TestConfiguration.class)
 public class BirthApplicationValidatorTest {
-
-    @MockBean
+    @Mock
     private BirthRegistrationRepository repository;
 
     @InjectMocks
-    private BirthApplicationValidator birthApplicationValidator;
+    private BirthApplicationValidator validator;
 
-    @Test
-    public void validateBirthApplicationException(){
-        BirthRegistrationRequest birthRegistrationRequest = new BirthRegistrationRequest();
-        BirthRegistrationApplication birthRegistrationApplication = new BirthRegistrationApplication();
-        birthRegistrationApplication.setTenantId(null);
-        birthRegistrationRequest.setBirthRegistrationApplications(Collections.singletonList(birthRegistrationApplication));
-
-        CustomException exception = assertThrows(CustomException.class, ()-> birthApplicationValidator.validateBirthApplication(birthRegistrationRequest));
-        assertEquals("EG_BT_APP_ERR", "tenantId is mandatory for creating birth registration applications",exception.getMessage());
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void validateApplicationExistenceTest(){
-        BirthRegistrationApplication birthRegistrationApplication = new BirthRegistrationApplication();
-        birthRegistrationApplication.setApplicationNumber("test");
-        when(repository.getApplications(any(BirthApplicationSearchCriteria.class))).thenReturn(Arrays.asList(birthRegistrationApplication));
+    public void testValidateBirthApplication_WithValidRequest() {
+        BirthRegistrationRequest request = new BirthRegistrationRequest();
+        BirthRegistrationApplication application = new BirthRegistrationApplication();
+        application.setTenantId("tenantId");
+        request.getBirthRegistrationApplications().add(application);
 
-      //  birthApplicationValidator.validateApplicationExistence(birthRegistrationApplication);
-        verify(repository, times(0)).getApplications(any(BirthApplicationSearchCriteria.class));
+        assertDoesNotThrow(() -> validator.validateBirthApplication(request));
+    }
 
+    @Test
+    public void testValidateBirthApplication_WithMissingTenantId() {
+        BirthRegistrationRequest request = new BirthRegistrationRequest();
+        BirthRegistrationApplication application = new BirthRegistrationApplication();
+        request.getBirthRegistrationApplications().add(application);
+
+        CustomException exception = assertThrows(CustomException.class, () -> validator.validateBirthApplication(request));
+        assertEquals("EG_BT_APP_ERR", exception.getCode());
+        assertEquals("tenantId is mandatory for creating birth registration applications", exception.getMessage());
+    }
+
+    @Test
+    public void testValidateApplicationExistence_WithExistingApplication() {
+        BirthRegistrationApplication application = new BirthRegistrationApplication();
+        application.setApplicationNumber("appNumber");
+        when(repository.getApplications(any())).thenReturn(Collections.singletonList(application));
+
+        BirthRegistrationApplication result = validator.validateApplicationExistence(application);
+
+        assertNotNull(result);
+        assertEquals("appNumber", result.getApplicationNumber());
+    }
+
+    @Test
+    public void testValidateApplicationExistence_WithNonExistingApplication() {
+        BirthRegistrationApplication application = new BirthRegistrationApplication();
+        application.setApplicationNumber("appNumber");
+        when(repository.getApplications(any())).thenReturn(Collections.emptyList());
+
+        CustomException exception = assertThrows(CustomException.class, () -> validator.validateApplicationExistence(application));
+        assertEquals("EG_BT_APP_ERR", exception.getCode());
+        assertEquals("Application not found with number: appNumber", exception.getMessage());
     }
 }

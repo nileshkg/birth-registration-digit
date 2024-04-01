@@ -1,73 +1,88 @@
 package digit.service;
 
-import digit.TestConfiguration;
 import digit.enrichment.BirthApplicationEnrichment;
+import digit.kafka.Producer;
 import digit.models.BirthApplicationSearchCriteria;
 import digit.models.BirthRegistrationApplication;
 import digit.models.BirthRegistrationRequest;
 import digit.repository.BirthRegistrationRepository;
-import digit.validators.BirthApplicationValidatorTest;
+import digit.validators.BirthApplicationValidator;
 import org.egov.common.contract.request.RequestInfo;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 
-@RunWith(SpringRunner.class)
-@Import(TestConfiguration.class)
 public class BirthRegistrationServiceTest {
+    @Mock
+    private BirthApplicationValidator validator;
 
-    @MockBean
-    private BirthApplicationValidatorTest validator;
-
-    @MockBean
+    @Mock
     private BirthApplicationEnrichment enrichmentUtil;
 
-    @MockBean
+    @Mock
     private UserService userService;
 
-    @MockBean
-    private WorkflowService workflowService;
-
-    @MockBean
+    @Mock
     private BirthRegistrationRepository birthRegistrationRepository;
 
-    @MockBean
+    @Mock
+    private Producer producer;
+
+    @InjectMocks
     private BirthRegistrationService birthRegistrationService;
 
-    @Test
-    public void registerBtRequestSuccess(){
-        BirthRegistrationRequest birthRegistrationRequest = new BirthRegistrationRequest();
-        birthRegistrationRequest.setRequestInfo(new RequestInfo());
-        birthRegistrationRequest.setBirthRegistrationApplications(new ArrayList<>());
-        assertEquals(birthRegistrationService.registerBtRequest(birthRegistrationRequest), birthRegistrationRequest.getBirthRegistrationApplications());
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void searchBtApplicationsSuccess(){
+    public void testRegisterBtRequest() {
+        BirthRegistrationRequest request = new BirthRegistrationRequest();
+        when(birthRegistrationRepository.getApplications(any())).thenReturn(Collections.emptyList());
+
+        List<BirthRegistrationApplication> result = birthRegistrationService.registerBtRequest(request);
+
+        assertEquals(0, result.size());
+        verify(validator, times(1)).validateBirthApplication(request);
+        verify(enrichmentUtil, times(1)).enrichBirthApplication(request);
+        verify(userService, times(1)).callUserService(request);
+        verify(producer, times(1)).push(anyString(), eq(request));
+    }
+
+    @Test
+    public void testSearchBtApplications() {
         RequestInfo requestInfo = new RequestInfo();
-        BirthApplicationSearchCriteria birthApplicationSearchCriteria = new BirthApplicationSearchCriteria();
-        birthApplicationSearchCriteria.setTenantId("123");
-        List<BirthRegistrationApplication> applications = new ArrayList<>();
-        when(birthRegistrationRepository.getApplications(birthApplicationSearchCriteria)).thenReturn(applications);
-        assertEquals(birthRegistrationService.searchBtApplications(requestInfo,birthApplicationSearchCriteria), new ArrayList<>());
+        BirthApplicationSearchCriteria searchCriteria = new BirthApplicationSearchCriteria();
+        when(birthRegistrationRepository.getApplications(any())).thenReturn(Collections.emptyList());
+
+        List<BirthRegistrationApplication> result = birthRegistrationService.searchBtApplications(requestInfo, searchCriteria);
+
+        assertEquals(0, result.size());
+        verify(birthRegistrationRepository, times(1)).getApplications(searchCriteria);
     }
 
     @Test
-    public void updateBtApplicationSuccess(){
-        BirthRegistrationRequest birthRegistrationRequest = new BirthRegistrationRequest();
-        birthRegistrationRequest.setRequestInfo(new RequestInfo());
-        birthRegistrationRequest.setBirthRegistrationApplications(new ArrayList<>());
-        assertEquals(birthRegistrationService.updateBtApplication(birthRegistrationRequest), null);
-    }
+    public void testUpdateBtApplication() {
+        BirthRegistrationRequest request = new BirthRegistrationRequest();
+        BirthRegistrationApplication application = new BirthRegistrationApplication();
+        request.setBirthRegistrationApplications(Collections.singletonList(application));
 
+        BirthRegistrationApplication result = birthRegistrationService.updateBtApplication(request);
+
+        assertEquals(application, result);
+        verify(validator, times(1)).validateApplicationExistence(application);
+        verify(enrichmentUtil, times(1)).enrichBirthApplicationUponUpdate(request);
+        verify(producer, times(1)).push(anyString(), eq(request));
+    }
 }
