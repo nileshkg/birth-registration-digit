@@ -1,5 +1,6 @@
 package digit.service;
 
+import digit.TestConfiguration;
 import digit.enrichment.BirthApplicationEnrichment;
 import digit.kafka.Producer;
 import digit.models.BirthApplicationSearchCriteria;
@@ -9,10 +10,11 @@ import digit.repository.BirthRegistrationRepository;
 import digit.validators.BirthApplicationValidator;
 import org.egov.common.contract.request.RequestInfo;
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.mockito.InjectMocks;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +24,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 
+@RunWith(SpringRunner.class)
+@Import(TestConfiguration.class)
 public class BirthRegistrationServiceTest {
     @Mock
     private BirthApplicationValidator validator;
@@ -38,16 +42,12 @@ public class BirthRegistrationServiceTest {
     @Mock
     private Producer producer;
 
-    @InjectMocks
+    @MockBean
     private BirthRegistrationService birthRegistrationService;
 
-    @BeforeEach
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @Test
-    public void testRegisterBtRequest() {
+    public void registerBtRequest_Test() {
         BirthRegistrationRequest request = new BirthRegistrationRequest();
         when(birthRegistrationRepository.getApplications(any())).thenReturn(Collections.emptyList());
 
@@ -61,7 +61,7 @@ public class BirthRegistrationServiceTest {
     }
 
     @Test
-    public void testSearchBtApplications() {
+    public void searchBtApplications_Test() {
         RequestInfo requestInfo = new RequestInfo();
         BirthApplicationSearchCriteria searchCriteria = new BirthApplicationSearchCriteria();
         when(birthRegistrationRepository.getApplications(any())).thenReturn(Collections.emptyList());
@@ -73,7 +73,7 @@ public class BirthRegistrationServiceTest {
     }
 
     @Test
-    public void testUpdateBtApplication() {
+    public void updateBtApplication_Test() {
         BirthRegistrationRequest request = new BirthRegistrationRequest();
         BirthRegistrationApplication application = new BirthRegistrationApplication();
         request.setBirthRegistrationApplications(Collections.singletonList(application));

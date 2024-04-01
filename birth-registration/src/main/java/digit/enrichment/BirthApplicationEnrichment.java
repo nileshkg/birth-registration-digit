@@ -3,10 +3,12 @@ package digit.enrichment;
 import digit.models.AuditDetails;
 import digit.models.BirthRegistrationApplication;
 import digit.models.BirthRegistrationRequest;
+import digit.models.coremodels.UserDetailResponse;
 import digit.service.UserService;
 import digit.util.IdgenUtil;
 import digit.util.UserUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.egov.common.contract.request.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -57,10 +59,10 @@ public class BirthApplicationEnrichment {
         birthRegistrationRequest.getBirthRegistrationApplications().get(0).getAuditDetails().setLastModifiedBy(birthRegistrationRequest.getRequestInfo().getUserInfo().getUuid());
     }
 
-//    public void enrichFatherApplicantOnSearch(BirthRegistrationApplication application) {
-//        digit.models.coremodels.UserDetailResponse fatherUserResponse = userService.searchUser(userUtils.getStateLevelTenant(application.getTenantId()),application.getFather().getId()+"",null);
-//        User fatherUser = fatherUserResponse.getUser().get(0);
-//        log.info(fatherUser.toString());
+   public void enrichFatherApplicantOnSearch(BirthRegistrationApplication application) {
+       UserDetailResponse fatherUserResponse = userService.searchUser(userUtils.getStateLevelTenant(application.getTenantId()),application.getFather().getId()+"",null);
+       User fatherUser = fatherUserResponse.getUser().get(0);
+       log.info(fatherUser.toString());
 //        User fatherApplicant = User.builder().aadhaarNumber(fatherUser.getAadhaarNumber())
 //                .accountLocked(fatherUser.getAccountLocked())
 //                .active(fatherUser.getActive())
@@ -75,12 +77,12 @@ public class BirthApplicationEnrichment {
 //                .type(fatherUser.getType())
 //                .roles(fatherUser.getRoles()).build();
 //        application.setFather(fatherApplicant);
-//    }
-//
-//    public void enrichMotherApplicantOnSearch(BirthRegistrationApplication application) {
-//        UserDetailResponse motherUserResponse = userService.searchUser(userUtils.getStateLevelTenant(application.getTenantId()),application.getFather().getId(),null);
-//        User motherUser = motherUserResponse.getUser().get(0);
-//        log.info(motherUser.toString());
+     }
+
+   public void enrichMotherApplicantOnSearch(BirthRegistrationApplication application) {
+       UserDetailResponse motherUserResponse = userService.searchUser(userUtils.getStateLevelTenant(application.getTenantId()), String.valueOf(application.getFather().getId()),null);
+        User motherUser = motherUserResponse.getUser().get(0);
+        log.info(motherUser.toString());
 //        MotherApplicant motherApplicant = MotherApplicant.builder().aadhaarNumber(motherUser.getAadhaarNumber())
 //                .accountLocked(motherUser.getAccountLocked())
 //                .active(motherUser.getActive())
@@ -95,5 +97,5 @@ public class BirthApplicationEnrichment {
 //                .type(motherUser.getType())
 //                .roles(motherUser.getRoles()).build();
 //        application.setMother(motherApplicant);
-//    }
+    }
 }

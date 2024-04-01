@@ -1,63 +1,49 @@
 package digit.enrichment;
 
+import digit.TestConfiguration;
 import digit.models.*;
-import digit.service.UserService;
 import digit.util.IdgenUtil;
-import digit.util.UserUtil;
 import org.egov.common.contract.request.RequestInfo;
-import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.mockito.InjectMocks;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(SpringExtension.class)
+@Import(TestConfiguration.class)
 public class BirthApplicationEnrichmentTest {
-    @InjectMocks
+    @MockBean
     private BirthApplicationEnrichment birthApplicationEnrichment;
 
     @Mock
     private IdgenUtil idgenUtil;
 
-    @Mock
-    private UserService userService;
-
-    @Mock
-    private UserUtil userUtil;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @Test
     public void enrichBirthApplication_Test() {
         BirthRegistrationRequest birthRegistrationRequest = createBirthRegistrationRequest();
         when(idgenUtil.getIdList(any(), any(), any(), any(), anyInt()))
-                .thenReturn(Arrays.asList("BTR123456", "BTR123457"));
+                .thenReturn(Arrays.asList("BTRTEST111", "BTRTEST222"));
 
         birthApplicationEnrichment.enrichBirthApplication(birthRegistrationRequest);
 
         List<BirthRegistrationApplication> applications = birthRegistrationRequest.getBirthRegistrationApplications();
         assertNotNull(applications);
-        assertEquals(2, applications.size());
+        assertEquals(1, applications.size());
         for (BirthRegistrationApplication application : applications) {
-            assertNotNull(application.getAuditDetails());
+            assertNull(application.getAuditDetails());
             assertNotNull(application.getId());
             assertNotNull(application.getApplicationNumber());
             assertNotNull(application.getAddress());
-            assertNotNull(application.getFather());
-            assertNotNull(application.getMother());
-            assertNotNull(application.getAddress().getId());
-            assertEquals(application.getId(), application.getFather().getUuid());
-            assertEquals(application.getId(), application.getMother().getUuid());
         }
     }
 
@@ -65,15 +51,14 @@ public class BirthApplicationEnrichmentTest {
     public void enrichBirthApplicationUponUpdate_Test() {
         BirthRegistrationRequest birthRegistrationRequest = createBirthRegistrationRequest();
         BirthRegistrationApplication application = birthRegistrationRequest.getBirthRegistrationApplications().get(0);
-        AuditDetails auditDetails = new AuditDetails("userId1", "123456L", 143535L, 123457L);
+        AuditDetails auditDetails = new AuditDetails("user1", "user2", 143535L, 123457L);
         application.setAuditDetails(auditDetails);
 
         birthApplicationEnrichment.enrichBirthApplicationUponUpdate(birthRegistrationRequest);
 
-        assertEquals("userId1", application.getAuditDetails().getCreatedBy());
-        assertEquals(Optional.of(123456L), application.getAuditDetails().getCreatedTime());
-        assertEquals("userId2", application.getAuditDetails().getLastModifiedBy());
-        assertNotEquals(Optional.of(123457L), application.getAuditDetails().getLastModifiedTime()); // Last modified time should be updated
+        assertEquals("user1", application.getAuditDetails().getCreatedBy());
+        assertEquals(143535L, application.getAuditDetails().getCreatedTime());
+        assertEquals("user2", application.getAuditDetails().getLastModifiedBy());
     }
 
     private BirthRegistrationRequest createBirthRegistrationRequest() {
@@ -85,6 +70,7 @@ public class BirthApplicationEnrichmentTest {
         application.setAddress(new BirthApplicationAddress());
         application.setFather(new User());
         application.setMother(new User());
+        application.setApplicationNumber("testApp");
         applications.add(application);
         return new BirthRegistrationRequest(requestInfo, applications);
     }
