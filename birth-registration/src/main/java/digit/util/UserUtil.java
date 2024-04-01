@@ -109,6 +109,7 @@ public class UserUtil {
     public void addUserDefaultFields(String mobileNumber, String tenantId, User userInfo){
         Role role = getCitizenRole(tenantId);
         digit.models.Role roleBis = new digit.models.Role();
+        roleBis.setCode(role.getCode());
         roleBis.setName(role.getName());
         roleBis.setTenantId(role.getTenantId());
         userInfo.setRoles(Collections.singletonList(roleBis));

@@ -18,7 +18,7 @@ import lombok.Builder;
  */
 @Schema(description = "This is acting ID token of the authenticated user on the server. Any value provided by the clients will be ignored and actual user based on authtoken will be used on the server.")
 @Validated
-@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-03-14T01:36:21.586087Z[Africa/Dakar]")
+@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-03-18T12:06:21.586087Z[Asia/Kolkata]")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

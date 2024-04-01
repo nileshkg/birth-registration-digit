@@ -1,11 +1,8 @@
 package digit.models;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.validation.annotation.Validated;
-import javax.validation.Valid;
 import javax.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -17,7 +14,7 @@ import lombok.Builder;
  */
 @Schema(description = "minimal representation of the Roles in the system to be carried along in UserInfo with RequestInfo meta data. Actual authorization service to extend this to have more role related attributes ")
 @Validated
-@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-03-14T01:36:21.586087Z[Africa/Dakar]")
+@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-03-18T12:06:21.586087Z[Asia/Kolkata]")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -39,6 +36,10 @@ public class Role   {
         @JsonProperty("description")
 
                 private String description = null;
+
+    @JsonProperty("code")
+
+    private String code = null;
 
 
 }

@@ -17,7 +17,7 @@ import lombok.Builder;
  */
 @Schema(description = "Error object will be returned as a part of reponse body in conjunction with ResponseInfo as part of ErrorResponse whenever the request processing status in the ResponseInfo is FAILED. HTTP return in this scenario will usually be HTTP 400.")
 @Validated
-@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-03-14T01:36:21.586087Z[Africa/Dakar]")
+@javax.annotation.Generated(value = "org.egov.codegen.SpringBootCodegen", date = "2024-03-18T12:06:21.586087Z[Asia/Kolkata]")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

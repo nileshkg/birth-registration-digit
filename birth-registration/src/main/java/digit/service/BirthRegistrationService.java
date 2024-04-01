@@ -9,7 +9,6 @@ import digit.models.BirthRegistrationRequest;
 import digit.repository.BirthRegistrationRepository;
 import digit.validators.BirthApplicationValidator;
 import digit.models.*;
-//import digit.web.models.FatherApplicant;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,8 +77,7 @@ public class BirthRegistrationService {
 
         //WORKFLOW INTEGRATION
         applications.forEach(application -> {
-            ProcessInstance process = workflowService.getCurrentWorkflow(requestInfo, application.getTenantId(), "BTR");
-            application.setWorkflow(Workflow.builder().status(process.getState().getState()).build());
+            application.setWorkflow(Workflow.builder().status(workflowService.getCurrentWorkflow(requestInfo, application.getTenantId(), application.getApplicationNumber()).getState().getState()).build());
         });
 
         // Otherwise return the found applications
